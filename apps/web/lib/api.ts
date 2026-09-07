@@ -211,7 +211,19 @@ async function handleMockFallback(url: string, options: RequestInit = {}): Promi
   }
 
   if (url.includes("/api/v1/campaigns/") && url.includes("/recipients")) {
-    return MOCK_RECIPIENTS;
+    let list = [...MOCK_RECIPIENTS];
+    try {
+      const u = new URL(url, "http://localhost");
+      const st = u.searchParams.get("status");
+      const sr = u.searchParams.get("search")?.toLowerCase();
+      if (st && st.toUpperCase() !== "ALL") {
+        list = list.filter((r) => r.status.toUpperCase() === st.toUpperCase());
+      }
+      if (sr) {
+        list = list.filter((r) => (r.name || "").toLowerCase().includes(sr) || (r.phone_number || "").includes(sr));
+      }
+    } catch {}
+    return list;
   }
 
   if (url.includes("/api/v1/campaigns/") && (url.includes("/pause") || url.includes("/resume") || url.includes("/cancel"))) {

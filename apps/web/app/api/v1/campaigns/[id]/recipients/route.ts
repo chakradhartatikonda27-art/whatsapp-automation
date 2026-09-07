@@ -8,15 +8,21 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
   let recipients = STORE.recipients.filter((r) => r.campaign_id === params.id);
 
-  // If no recipients for this campaign ID specifically, fallback to returning all stored recipients
+  // If no recipients specifically match this campaign ID (e.g. serverless cold start),
+  // adapt existing stored recipients to match this campaign ID
   if (recipients.length === 0) {
-    recipients = STORE.recipients;
+    recipients = STORE.recipients.map((r) => ({
+      ...r,
+      campaign_id: params.id
+    }));
   }
 
-  if (statusFilter) {
+  // Filter by status (ignore "ALL")
+  if (statusFilter && statusFilter.toUpperCase() !== "ALL") {
     recipients = recipients.filter((r) => r.status.toUpperCase() === statusFilter.toUpperCase());
   }
 
+  // Filter by search query
   if (search) {
     recipients = recipients.filter(
       (r) =>
