@@ -405,4 +405,10 @@ export const api = {
   getContactHistory: (contactId: string) => fetchWithAuth(`/api/v1/contacts/${contactId}/history`),
 
   getWhatsAppStatus: () => fetchWithAuth("/api/v1/whatsapp/status"),
+  getWhatsAppConfig: () => fetchWithAuth("/api/v1/whatsapp/config"),
+  updateWhatsAppConfig: (data: any) =>
+    fetchWithAuth("/api/v1/whatsapp/config", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

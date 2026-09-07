@@ -63,6 +63,14 @@ export interface ImportSession {
 
 // In-Memory Data Store across Serverless Invocations
 export const STORE = {
+  config: {
+    mode: "DEMO" as "DEMO" | "LIVE",
+    phone_number_id: "pn_48372610",
+    business_account_id: "act_10293847",
+    access_token: "",
+    display_phone_number: "+91 98765 43210",
+    verify_token: "apex_realestate_verify_secret"
+  },
   templates: [
     {
       id: "31a0550e-1dcb-4dc3-9605-b936526455e8",

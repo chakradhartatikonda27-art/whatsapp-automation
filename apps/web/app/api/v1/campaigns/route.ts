@@ -80,7 +80,6 @@ export async function POST(req: Request) {
     } else if (Array.isArray(body.contacts) && body.contacts.length > 0) {
       targetContacts = body.contacts;
     } else {
-      // Fallback sample contacts if none specified
       targetContacts = [
         { name: "Ravi Kumar", phone_number: "+919876543210", location: "Gachibowli, Hyderabad" },
         { name: "Priya Sharma", phone_number: "+919876543211", location: "Jubilee Hills, Hyderabad" },
@@ -96,6 +95,7 @@ export async function POST(req: Request) {
 
     const messageTemplateOrBody = body.message_body || body.template_id || "Real Estate Announcement";
     const mediaUrl = body.media_url || "";
+    const isLiveMode = STORE.config.mode === "LIVE" && Boolean(STORE.config.access_token);
 
     for (const c of targetContacts) {
       const phoneRes = normalizePhone(c.phone_number || c.phone || "");
@@ -110,7 +110,6 @@ export async function POST(req: Request) {
 
       const vars = { name: contactName, location };
       const fingerprint = computeMessageFingerprint(orgId, canonicalPhone, messageTemplateOrBody, vars, mediaUrl);
-
       const recipientId = "rec_" + Math.random().toString(36).substring(2, 9);
 
       if (STORE.messageHashes.has(fingerprint)) {
@@ -129,11 +128,76 @@ export async function POST(req: Request) {
           whatsapp_message_id: null
         });
       } else {
-        // NEW MESSAGE - DISPATCH AND RECORD FINGERPRINT
-        STORE.messageHashes.add(fingerprint);
-        sentCount++;
-        deliveredCount++;
-        readCount++;
+        // NEW MESSAGE DISPATCH
+        let wamid: string | null = null;
+        let dispatchStatus = "DELIVERED";
+        let failureReason: string | null = null;
+
+        if (isLiveMode) {
+          // DISPATCH TO LIVE META WHATSAPP CLOUD API
+          try {
+            const interpolatedText = (body.message_body || "Hello {{Name}}")
+              .replace(/\{\{\s*Name\s*\}\}/gi, contactName)
+              .replace(/\{\{\s*Location\s*\}\}/gi, location)
+              .replace(/\{\{1\}\}/g, contactName)
+              .replace(/\{\{2\}\}/g, location);
+
+            const metaPayload: any = {
+              messaging_product: "whatsapp",
+              recipient_type: "individual",
+              to: canonicalPhone.replace("+", ""),
+            };
+
+            if (body.template_id) {
+              metaPayload.type = "template";
+              metaPayload.template = {
+                name: body.template_id,
+                language: { code: "en_US" }
+              };
+            } else {
+              metaPayload.type = "text";
+              metaPayload.text = { body: interpolatedText };
+            }
+
+            const metaRes = await fetch(
+              `https://graph.facebook.com/v19.0/${STORE.config.phone_number_id}/messages`,
+              {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${STORE.config.access_token}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify(metaPayload)
+              }
+            );
+
+            if (metaRes.ok) {
+              const metaData = await metaRes.json();
+              wamid = metaData.messages?.[0]?.id || "wamid.META_" + Math.random().toString(36).substring(2, 10);
+              dispatchStatus = "SENT";
+              sentCount++;
+              deliveredCount++;
+              STORE.messageHashes.add(fingerprint);
+            } else {
+              const errData = await metaRes.json().catch(() => ({}));
+              dispatchStatus = "FAILED";
+              failureReason = "Meta API Error: " + (errData.error?.message || "HTTP " + metaRes.status);
+              failedCount++;
+            }
+          } catch (metaErr: any) {
+            dispatchStatus = "FAILED";
+            failureReason = "Meta API Exception: " + metaErr.message;
+            failedCount++;
+          }
+        } else {
+          // DEMO MODE / SIMULATED DISPATCH
+          STORE.messageHashes.add(fingerprint);
+          wamid = "wamid.DEMO_" + Math.random().toString(36).substring(2, 10).toUpperCase();
+          dispatchStatus = "DELIVERED";
+          sentCount++;
+          deliveredCount++;
+          readCount++;
+        }
 
         STORE.recipients.push({
           id: recipientId,
@@ -143,12 +207,12 @@ export async function POST(req: Request) {
           name: contactName,
           location: location,
           message_hash: fingerprint,
-          status: "DELIVERED",
-          skip_reason: null,
-          whatsapp_message_id: "wamid." + Math.random().toString(36).substring(2, 12).toUpperCase(),
+          status: dispatchStatus,
+          skip_reason: failureReason,
+          whatsapp_message_id: wamid,
           sent_at: new Date().toISOString(),
-          delivered_at: new Date().toISOString(),
-          read_at: new Date().toISOString()
+          delivered_at: dispatchStatus === "DELIVERED" ? new Date().toISOString() : undefined,
+          read_at: dispatchStatus === "READ" || dispatchStatus === "DELIVERED" ? new Date().toISOString() : undefined
         });
 
         // Add to global contacts directory if not present
