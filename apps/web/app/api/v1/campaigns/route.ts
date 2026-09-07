@@ -177,6 +177,10 @@ export async function POST(req: Request) {
       }
     }
 
+    const totalToProcess = targetContacts.length;
+    const isAllSkipped = skippedCount >= totalToProcess;
+    const initialStatus = isAllSkipped ? "COMPLETED" : "PROCESSING";
+
     const campaignRecord: CampaignRecord = {
       id: campaignId,
       organization_id: orgId,
@@ -185,18 +189,18 @@ export async function POST(req: Request) {
       template_id: body.template_id || null,
       message_body: body.message_body || null,
       media_url: mediaUrl || null,
-      status: "COMPLETED",
-      total_contacts: targetContacts.length,
-      queued_count: 0,
-      sent_count: sentCount,
-      delivered_count: deliveredCount,
-      read_count: readCount,
+      status: initialStatus,
+      total_contacts: totalToProcess,
+      queued_count: isAllSkipped ? 0 : totalToProcess - skippedCount,
+      sent_count: isAllSkipped ? 0 : sentCount,
+      delivered_count: isAllSkipped ? 0 : deliveredCount,
+      read_count: isAllSkipped ? 0 : readCount,
       failed_count: failedCount,
       skipped_count: skippedCount,
       created_by: "user_demo",
       created_at: new Date().toISOString(),
       started_at: new Date().toISOString(),
-      completed_at: new Date().toISOString(),
+      completed_at: isAllSkipped ? new Date().toISOString() : undefined,
       processed_fingerprints: processedFingerprints
     } as any;
 

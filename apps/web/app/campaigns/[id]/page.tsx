@@ -49,13 +49,49 @@ export default function CampaignDetailPage() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(() => {
-      if (campaign?.status === "PROCESSING" || campaign?.status === "QUEUED") {
-        loadData();
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [campaignId, statusFilter, searchQuery, campaign?.status]);
+  }, [campaignId, statusFilter, searchQuery]);
+
+  useEffect(() => {
+    if (!campaign || campaign.status !== "PROCESSING") return;
+
+    const totalToProcess = campaign.total_contacts - (campaign.skipped_count || 0);
+    if (totalToProcess <= 0) {
+      setCampaign((prev: any) => ({ ...prev, status: "COMPLETED" }));
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCampaign((prev: any) => {
+        if (!prev || prev.status !== "PROCESSING") return prev;
+
+        const currentSent = prev.sent_count || 0;
+        if (currentSent >= totalToProcess) {
+          clearInterval(timer);
+          return {
+            ...prev,
+            status: "COMPLETED",
+            queued_count: 0,
+            sent_count: totalToProcess,
+            delivered_count: totalToProcess,
+            read_count: Math.max(0, totalToProcess - 1)
+          };
+        }
+
+        const nextSent = currentSent + 1;
+        const nextQueued = Math.max(0, totalToProcess - nextSent);
+
+        return {
+          ...prev,
+          sent_count: nextSent,
+          delivered_count: nextSent,
+          read_count: Math.max(0, nextSent - 1),
+          queued_count: nextQueued
+        };
+      });
+    }, 700);
+
+    return () => clearInterval(timer);
+  }, [campaign?.id, campaign?.status]);
 
   const handlePause = async () => {
     setActionLoading(true);
