@@ -13,6 +13,10 @@ export async function POST(req: Request) {
     const campaignId = "cmp_" + Math.random().toString(36).substring(2, 9);
     const orgId = "org_apex_realestate";
 
+    if (Array.isArray(body.client_fingerprints)) {
+      body.client_fingerprints.forEach((h: string) => STORE.messageHashes.add(h));
+    }
+
     let targetContacts: any[] = [];
 
     if (body.import_id && STORE.imports[body.import_id]) {
@@ -32,6 +36,7 @@ export async function POST(req: Request) {
     let readCount = 0;
     let skippedCount = 0;
     let failedCount = 0;
+    const processedFingerprints: string[] = [];
 
     const messageTemplateOrBody = body.message_body || body.template_id || "Real Estate Announcement";
     const mediaUrl = body.media_url || "";
@@ -51,6 +56,7 @@ export async function POST(req: Request) {
       const vars = { name: contactName, location };
       const fingerprint = computeMessageFingerprint(orgId, canonicalPhone, messageTemplateOrBody, vars, mediaUrl);
       const recipientId = "rec_" + Math.random().toString(36).substring(2, 9);
+      processedFingerprints.push(fingerprint);
 
       const isDuplicate = STORE.messageHashes.has(fingerprint) || STORE.recipients.some((r) => r.message_hash === fingerprint);
 
@@ -190,8 +196,9 @@ export async function POST(req: Request) {
       created_by: "user_demo",
       created_at: new Date().toISOString(),
       started_at: new Date().toISOString(),
-      completed_at: new Date().toISOString()
-    };
+      completed_at: new Date().toISOString(),
+      processed_fingerprints: processedFingerprints
+    } as any;
 
     STORE.campaigns.unshift(campaignRecord);
     saveStore();

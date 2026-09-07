@@ -368,7 +368,7 @@ export const api = {
 
   getTemplates: () => fetchWithAuth("/api/v1/templates"),
 
-  createCampaign: (data: {
+  createCampaign: async (data: {
     name: string;
     template_id?: string;
     message_type?: string;
@@ -376,11 +376,33 @@ export const api = {
     media_url?: string;
     import_id?: string;
     contacts?: any[];
-  }) =>
-    fetchWithAuth("/api/v1/campaigns", {
+  }) => {
+    let clientFingerprints: string[] = [];
+    if (typeof window !== "undefined") {
+      try {
+        clientFingerprints = JSON.parse(localStorage.getItem("whatsapp_sent_fingerprints") || "[]");
+      } catch {}
+    }
+
+    const payload = {
+      ...data,
+      client_fingerprints: clientFingerprints,
+    };
+
+    const res = await fetchWithAuth("/api/v1/campaigns", {
       method: "POST",
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(payload),
+    });
+
+    if (typeof window !== "undefined" && res?.processed_fingerprints && Array.isArray(res.processed_fingerprints)) {
+      try {
+        const merged = Array.from(new Set([...clientFingerprints, ...res.processed_fingerprints]));
+        localStorage.setItem("whatsapp_sent_fingerprints", JSON.stringify(merged));
+      } catch {}
+    }
+
+    return res;
+  },
 
   getCampaigns: () => fetchWithAuth("/api/v1/campaigns"),
 
