@@ -1,74 +1,14 @@
 import { NextResponse } from "next/server";
-import { STORE, computeMessageFingerprint, normalizePhone, CampaignRecord, RecipientRecord } from "@/lib/db";
-
-// Pre-populate initial mock campaign if empty
-if (STORE.campaigns.length === 0) {
-  STORE.campaigns.push({
-    id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
-    organization_id: "org_apex_realestate",
-    name: "Gachibowli Luxury Villas Prospect Blast",
-    message_type: "custom",
-    template_id: null,
-    status: "COMPLETED",
-    total_contacts: 3,
-    queued_count: 0,
-    sent_count: 3,
-    delivered_count: 3,
-    read_count: 2,
-    failed_count: 0,
-    skipped_count: 0,
-    created_by: "user_demo",
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    started_at: new Date(Date.now() - 3500000).toISOString(),
-    completed_at: new Date(Date.now() - 3400000).toISOString()
-  });
-
-  STORE.recipients.push(
-    {
-      id: "rec_1",
-      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
-      organization_id: "org_apex_realestate",
-      phone_number: "+919876543210",
-      name: "Ravi Kumar",
-      location: "Gachibowli, Hyderabad",
-      message_hash: "hash_demo_1",
-      status: "DELIVERED",
-      whatsapp_message_id: "wamid.HBgM12345678",
-      sent_at: new Date(Date.now() - 3500000).toISOString()
-    },
-    {
-      id: "rec_2",
-      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
-      organization_id: "org_apex_realestate",
-      phone_number: "+919876543211",
-      name: "Priya Sharma",
-      location: "Jubilee Hills, Hyderabad",
-      message_hash: "hash_demo_2",
-      status: "READ",
-      whatsapp_message_id: "wamid.HBgM12345679",
-      sent_at: new Date(Date.now() - 3500000).toISOString()
-    },
-    {
-      id: "rec_3",
-      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
-      organization_id: "org_apex_realestate",
-      phone_number: "+919876543212",
-      name: "Suresh Reddy",
-      location: "Banjara Hills, Hyderabad",
-      message_hash: "hash_demo_3",
-      status: "DELIVERED",
-      whatsapp_message_id: "wamid.HBgM12345680",
-      sent_at: new Date(Date.now() - 3500000).toISOString()
-    }
-  );
-}
+import { STORE, loadStore, saveStore, computeMessageFingerprint, normalizePhone, CampaignRecord, RecipientRecord } from "@/lib/db";
 
 export async function GET() {
+  loadStore();
   return NextResponse.json(STORE.campaigns);
 }
 
 export async function POST(req: Request) {
   try {
+    loadStore();
     const body = await req.json();
     const campaignId = "cmp_" + Math.random().toString(36).substring(2, 9);
     const orgId = "org_apex_realestate";
@@ -112,7 +52,9 @@ export async function POST(req: Request) {
       const fingerprint = computeMessageFingerprint(orgId, canonicalPhone, messageTemplateOrBody, vars, mediaUrl);
       const recipientId = "rec_" + Math.random().toString(36).substring(2, 9);
 
-      if (STORE.messageHashes.has(fingerprint)) {
+      const isDuplicate = STORE.messageHashes.has(fingerprint) || STORE.recipients.some((r) => r.message_hash === fingerprint);
+
+      if (isDuplicate) {
         // DUPLICATE DETECTED - SKIP OUTBOUND DISPATCH
         skippedCount++;
         STORE.recipients.push({
@@ -252,6 +194,7 @@ export async function POST(req: Request) {
     };
 
     STORE.campaigns.unshift(campaignRecord);
+    saveStore();
     return NextResponse.json(campaignRecord, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ detail: err.message || "Failed to create campaign" }, { status: 500 });

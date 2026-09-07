@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 export interface ContactRecord {
   id: string;
@@ -61,7 +63,7 @@ export interface ImportSession {
   detected_columns: Record<string, string>;
 }
 
-// In-Memory Data Store across Serverless Invocations
+// Global In-Memory Store
 export const STORE = {
   config: {
     mode: "DEMO" as "DEMO" | "LIVE",
@@ -189,9 +191,57 @@ export const STORE = {
     }
   ] as ContactRecord[],
   imports: {} as Record<string, ImportSession>,
-  // SHA-256 fingerprint ledger for 100% duplicate protection
   messageHashes: new Set<string>()
 };
+
+const TMP_FILE = path.join("/tmp", "whatsapp_saas_store_persist.json");
+
+export function saveStore() {
+  try {
+    const data = {
+      config: STORE.config,
+      campaigns: STORE.campaigns,
+      recipients: STORE.recipients,
+      contacts: STORE.contacts,
+      imports: STORE.imports,
+      messageHashes: Array.from(STORE.messageHashes)
+    };
+    fs.writeFileSync(TMP_FILE, JSON.stringify(data), "utf-8");
+  } catch (e) {
+    // Ignore file write errors on read-only systems
+  }
+}
+
+export function loadStore() {
+  try {
+    if (fs.existsSync(TMP_FILE)) {
+      const raw = fs.readFileSync(TMP_FILE, "utf-8");
+      const data = JSON.parse(raw);
+      if (data.config) STORE.config = data.config;
+      if (Array.isArray(data.campaigns)) STORE.campaigns = data.campaigns;
+      if (Array.isArray(data.recipients)) STORE.recipients = data.recipients;
+      if (Array.isArray(data.contacts)) STORE.contacts = data.contacts;
+      if (data.imports) STORE.imports = data.imports;
+      if (Array.isArray(data.messageHashes)) {
+        data.messageHashes.forEach((h: string) => STORE.messageHashes.add(h));
+      }
+    }
+  } catch (e) {
+    // Ignore load errors
+  }
+
+  // Populate messageHashes from recipients array to guarantee duplicate detection
+  if (STORE.recipients && Array.isArray(STORE.recipients)) {
+    STORE.recipients.forEach((r) => {
+      if (r.message_hash) {
+        STORE.messageHashes.add(r.message_hash);
+      }
+    });
+  }
+}
+
+// Initial load
+loadStore();
 
 export function computeMessageFingerprint(
   organizationId: string,
