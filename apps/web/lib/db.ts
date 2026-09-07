@@ -95,9 +95,91 @@ export const STORE = {
       ]
     }
   ],
-  campaigns: [] as CampaignRecord[],
-  recipients: [] as RecipientRecord[],
-  contacts: [] as ContactRecord[],
+  campaigns: [
+    {
+      id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
+      organization_id: "org_apex_realestate",
+      name: "Gachibowli Luxury Villas Prospect Blast",
+      message_type: "custom",
+      template_id: null,
+      status: "COMPLETED",
+      total_contacts: 3,
+      queued_count: 0,
+      sent_count: 3,
+      delivered_count: 3,
+      read_count: 2,
+      failed_count: 0,
+      skipped_count: 0,
+      created_by: "user_demo",
+      created_at: new Date(Date.now() - 3600000).toISOString(),
+      started_at: new Date(Date.now() - 3500000).toISOString(),
+      completed_at: new Date(Date.now() - 3400000).toISOString()
+    }
+  ] as CampaignRecord[],
+  recipients: [
+    {
+      id: "rec_1",
+      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
+      organization_id: "org_apex_realestate",
+      phone_number: "+919876543210",
+      name: "Ravi Kumar",
+      location: "Gachibowli, Hyderabad",
+      message_hash: "hash_demo_1",
+      status: "DELIVERED",
+      whatsapp_message_id: "wamid.HBgM12345678",
+      sent_at: new Date(Date.now() - 3500000).toISOString()
+    },
+    {
+      id: "rec_2",
+      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
+      organization_id: "org_apex_realestate",
+      phone_number: "+919876543211",
+      name: "Priya Sharma",
+      location: "Jubilee Hills, Hyderabad",
+      message_hash: "hash_demo_2",
+      status: "READ",
+      whatsapp_message_id: "wamid.HBgM12345679",
+      sent_at: new Date(Date.now() - 3500000).toISOString()
+    },
+    {
+      id: "rec_3",
+      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
+      organization_id: "org_apex_realestate",
+      phone_number: "+919876543212",
+      name: "Suresh Reddy",
+      location: "Banjara Hills, Hyderabad",
+      message_hash: "hash_demo_3",
+      status: "DELIVERED",
+      whatsapp_message_id: "wamid.HBgM12345680",
+      sent_at: new Date(Date.now() - 3500000).toISOString()
+    }
+  ] as RecipientRecord[],
+  contacts: [
+    {
+      id: "c1",
+      organization_id: "org_apex_realestate",
+      name: "Ravi Kumar",
+      phone_number: "+919876543210",
+      location: "Gachibowli, Hyderabad",
+      created_at: new Date(Date.now() - 86400000).toISOString()
+    },
+    {
+      id: "c2",
+      organization_id: "org_apex_realestate",
+      name: "Priya Sharma",
+      phone_number: "+919876543211",
+      location: "Jubilee Hills, Hyderabad",
+      created_at: new Date(Date.now() - 86400000).toISOString()
+    },
+    {
+      id: "c3",
+      organization_id: "org_apex_realestate",
+      name: "Suresh Reddy",
+      phone_number: "+919876543212",
+      location: "Banjara Hills, Hyderabad",
+      created_at: new Date(Date.now() - 86400000).toISOString()
+    }
+  ] as ContactRecord[],
   imports: {} as Record<string, ImportSession>,
   // SHA-256 fingerprint ledger for 100% duplicate protection
   messageHashes: new Set<string>()
