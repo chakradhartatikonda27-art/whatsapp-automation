@@ -1,0 +1,15 @@
+{
+  "name": "whatsapp-realestate-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "cd apps/web && npm install && npm run build",
+    "dev": "cd apps/web && npm run dev"
+  },
+  "dependencies": {
+    "next": "^14.2.4"
+  }
+}
