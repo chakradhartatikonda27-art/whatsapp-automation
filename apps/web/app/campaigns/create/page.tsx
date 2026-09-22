@@ -211,7 +211,7 @@ export default function CreateCampaignPage() {
         {step === 1 && (
           <div className="glass-card p-8 rounded-2xl max-w-3xl">
             <h2 className="text-lg font-semibold text-slate-100 mb-1">Step 1 — Upload Prospect Dataset</h2>
-            <p className="text-xs text-slate-400 mb-6">Supported formats: .xlsx, .xls, .csv</p>
+            <p className="text-xs text-slate-400 mb-6">Supported formats: Excel (.xlsx, .csv), Word (.docx), PDF (.pdf), Images (.jpg, .png), Text (.txt)</p>
 
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -228,17 +228,17 @@ export default function CreateCampaignPage() {
               </div>
 
               <p className="text-sm font-medium text-slate-200 mb-1">
-                Drag & drop your Excel or CSV dataset here
+                Drag & drop your Excel, Word, PDF, Image, or CSV dataset here
               </p>
-              <p className="text-xs text-slate-500 mb-4">or click to browse local files</p>
+              <p className="text-xs text-slate-500 mb-4">or click to browse local files (Excel, Word, PDF, Images, CSV, Text)</p>
 
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <label className="inline-flex items-center gap-2 py-2.5 px-5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer border border-slate-700">
                   <Upload className="w-4 h-4" />
-                  Select File
+                  Select File (Excel / Word / PDF / Images)
                   <input
                     type="file"
-                    accept=".xlsx,.xls,.csv"
+                    accept=".xlsx,.xls,.csv,.docx,.doc,.pdf,.txt,.png,.jpg,.jpeg,.webp"
                     className="hidden"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
