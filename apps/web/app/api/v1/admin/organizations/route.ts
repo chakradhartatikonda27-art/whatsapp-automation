@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { STORE, loadStore, saveStore, OrganizationRecord } from "@/lib/db";
+import { STORE, loadStore, saveStore, OrganizationRecord, SAAS_PLANS } from "@/lib/db";
 
 export async function GET() {
   loadStore();
@@ -42,12 +42,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: "A business with this name or slug already exists" }, { status: 400 });
     }
 
+    const defaultPlan = SAAS_PLANS[1]; // Growth Plan
+
     const newOrg: OrganizationRecord = {
       id: orgId,
       name: name,
       slug: slug,
       status: "ACTIVE",
       created_at: new Date().toISOString(),
+      plan: {
+        id: defaultPlan.id,
+        name: defaultPlan.name,
+        price: defaultPlan.price,
+        monthly_messages: defaultPlan.monthly_messages,
+        rate_per_meta_msg: defaultPlan.rate_per_meta_msg,
+        rate_per_platform_msg: defaultPlan.rate_per_platform_msg,
+        status: "ACTIVE",
+        next_renewal: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0]
+      },
+      wallet: {
+        balance: defaultPlan.price,
+        currency: "INR",
+        total_credits: defaultPlan.monthly_messages,
+        used_credits: 0
+      },
       whatsapp_config: {
         mode: body.mode || "DEMO",
         phone_number_id: body.phone_number_id || "pn_" + Math.random().toString(36).substring(2, 8),
@@ -55,7 +73,17 @@ export async function POST(req: Request) {
         access_token: body.access_token || "",
         display_phone_number: body.display_phone_number || "+91 98765 " + Math.floor(10000 + Math.random() * 90000),
         verify_token: slug.replace(/-/g, "_") + "_verify_secret"
-      }
+      },
+      billing_history: [
+        {
+          id: "bill_" + Math.random().toString(36).substring(2, 9),
+          amount: defaultPlan.price,
+          type: "PLAN_PAYMENT",
+          description: `${defaultPlan.name} Plan Initial Onboarding (${defaultPlan.monthly_messages.toLocaleString()} Messages)`,
+          date: new Date().toISOString(),
+          reference: `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`
+        }
+      ]
     };
 
     STORE.organizations.unshift(newOrg);

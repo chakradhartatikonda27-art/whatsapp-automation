@@ -19,7 +19,8 @@ import {
   ChevronDown,
   ShieldCheck,
   Zap,
-  Server
+  Server,
+  Wallet
 } from "lucide-react";
 
 export function Navigation() {
@@ -87,6 +88,7 @@ export function Navigation() {
     { href: "/campaigns", label: "Campaigns", icon: Send },
     { href: "/contacts", label: "Contacts", icon: Users },
     { href: "/templates", label: "Templates", icon: FileText },
+    { href: "/billing", label: "Billing & Wallet", icon: Wallet },
     { href: "/whatsapp", label: "WhatsApp Status", icon: MessageSquare },
     { href: "/settings", label: "Settings", icon: Settings },
     { href: "/admin", label: "Platform Admin", icon: ShieldCheck }

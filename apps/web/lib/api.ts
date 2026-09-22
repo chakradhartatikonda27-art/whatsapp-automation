@@ -444,4 +444,20 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getBillingDetails: () => fetchWithAuth("/api/v1/billing"),
+  topupWallet: (amount: number) =>
+    fetchWithAuth("/api/v1/billing", {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    }),
+  signupBusiness: (data: any) =>
+    fetchWithAuth("/api/v1/auth/signup", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  connectEmbeddedWhatsApp: (data: any) =>
+    fetchWithAuth("/api/v1/whatsapp/connect-embedded", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

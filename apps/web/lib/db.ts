@@ -6,8 +6,30 @@ export interface OrganizationRecord {
   id: string;
   name: string;
   slug: string;
+  owner_name?: string;
+  email?: string;
+  mobile_number?: string;
+  category?: string;
+  website?: string;
+  address?: string;
   status: "ACTIVE" | "INACTIVE";
   created_at: string;
+  plan: {
+    id: string;
+    name: string;
+    price: number;
+    monthly_messages: number;
+    rate_per_meta_msg: number;
+    rate_per_platform_msg: number;
+    status: string;
+    next_renewal: string;
+  };
+  wallet: {
+    balance: number;
+    currency: string;
+    total_credits: number;
+    used_credits: number;
+  };
   whatsapp_config: {
     mode: "DEMO" | "LIVE";
     phone_number_id: string;
@@ -15,7 +37,17 @@ export interface OrganizationRecord {
     access_token: string;
     display_phone_number: string;
     verify_token: string;
+    is_embedded_connected?: boolean;
+    connected_at?: string;
   };
+  billing_history: Array<{
+    id: string;
+    amount: number;
+    type: "PLAN_PAYMENT" | "TOPUP" | "CAMPAIGN_DISPATCH";
+    description: string;
+    date: string;
+    reference?: string;
+  }>;
 }
 
 export interface ContactRecord {
@@ -47,6 +79,8 @@ export interface CampaignRecord {
   created_at: string;
   started_at?: string;
   completed_at?: string;
+  estimated_cost?: number;
+  processed_fingerprints?: string[];
 }
 
 export interface RecipientRecord {
@@ -79,6 +113,45 @@ export interface ImportSession {
   detected_columns: Record<string, string>;
 }
 
+export const SAAS_PLANS = [
+  {
+    id: "plan_starter",
+    name: "Starter",
+    price: 2999,
+    monthly_messages: 5000,
+    rate_per_meta_msg: 0.78,
+    rate_per_platform_msg: 0.10,
+    description: "Ideal for small real estate agencies & individual brokers."
+  },
+  {
+    id: "plan_growth",
+    name: "Growth",
+    price: 5999,
+    monthly_messages: 10000,
+    rate_per_meta_msg: 0.75,
+    rate_per_platform_msg: 0.08,
+    description: "Best for growing real estate companies with active monthly lead blasts."
+  },
+  {
+    id: "plan_business",
+    name: "Business",
+    price: 12999,
+    monthly_messages: 25000,
+    rate_per_meta_msg: 0.70,
+    rate_per_platform_msg: 0.05,
+    description: "Designed for high-volume developers with multiple active property projects."
+  },
+  {
+    id: "plan_enterprise",
+    name: "Enterprise",
+    price: 29999,
+    monthly_messages: 100000,
+    rate_per_meta_msg: 0.65,
+    rate_per_platform_msg: 0.03,
+    description: "Custom enterprise volume with dedicated account manager & SLA support."
+  }
+];
+
 // Global In-Memory Multi-Tenant Store
 export const STORE = {
   organizations: [
@@ -86,76 +159,254 @@ export const STORE = {
       id: "org_sri_infra",
       name: "Sri Infra",
       slug: "sri-infra",
+      owner_name: "Srikanth Verma",
+      email: "admin@sriinfra.com",
+      mobile_number: "+91 98765 11111",
+      category: "Real Estate Developer",
+      website: "https://sriinfra.com",
+      address: "Rajahmundry, AP",
       status: "ACTIVE",
       created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+      plan: {
+        id: "plan_growth",
+        name: "Growth",
+        price: 5999,
+        monthly_messages: 10000,
+        rate_per_meta_msg: 0.75,
+        rate_per_platform_msg: 0.08,
+        status: "ACTIVE",
+        next_renewal: "2026-10-15"
+      },
+      wallet: {
+        balance: 5200,
+        currency: "INR",
+        total_credits: 10000,
+        used_credits: 8450
+      },
       whatsapp_config: {
         mode: "DEMO",
         phone_number_id: "pn_sri_101",
         business_account_id: "act_sri_201",
         access_token: "",
         display_phone_number: "+91 98765 11111",
-        verify_token: "sri_infra_verify_secret"
-      }
+        verify_token: "sri_infra_verify_secret",
+        is_embedded_connected: true,
+        connected_at: new Date(Date.now() - 28 * 86400000).toISOString()
+      },
+      billing_history: [
+        {
+          id: "bill_sri_1",
+          amount: 5999,
+          type: "PLAN_PAYMENT",
+          description: "Growth Plan Monthly Subscription (10,000 Messages)",
+          date: new Date(Date.now() - 30 * 86400000).toISOString(),
+          reference: "INV-2026-001"
+        },
+        {
+          id: "bill_sri_2",
+          amount: 2500,
+          type: "TOPUP",
+          description: "Wallet Credit Recharge (₹2,500)",
+          date: new Date(Date.now() - 10 * 86400000).toISOString(),
+          reference: "PAY-2026-882"
+        }
+      ]
     },
     {
       id: "org_sai_infra",
       name: "Sai Infra",
       slug: "sai-infra",
+      owner_name: "Sai Ram",
+      email: "admin@saiinfra.com",
+      mobile_number: "+91 98765 22222",
+      category: "Gated Community Projects",
+      website: "https://saiinfra.com",
+      address: "Visakhapatnam, AP",
       status: "ACTIVE",
       created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
+      plan: {
+        id: "plan_starter",
+        name: "Starter",
+        price: 2999,
+        monthly_messages: 5000,
+        rate_per_meta_msg: 0.78,
+        rate_per_platform_msg: 0.10,
+        status: "ACTIVE",
+        next_renewal: "2026-10-20"
+      },
+      wallet: {
+        balance: 3100,
+        currency: "INR",
+        total_credits: 5000,
+        used_credits: 1900
+      },
       whatsapp_config: {
         mode: "DEMO",
         phone_number_id: "pn_sai_102",
         business_account_id: "act_sai_202",
         access_token: "",
         display_phone_number: "+91 98765 22222",
-        verify_token: "sai_infra_verify_secret"
-      }
+        verify_token: "sai_infra_verify_secret",
+        is_embedded_connected: true,
+        connected_at: new Date(Date.now() - 24 * 86400000).toISOString()
+      },
+      billing_history: [
+        {
+          id: "bill_sai_1",
+          amount: 2999,
+          type: "PLAN_PAYMENT",
+          description: "Starter Plan Monthly Subscription (5,000 Messages)",
+          date: new Date(Date.now() - 25 * 86400000).toISOString(),
+          reference: "INV-2026-002"
+        }
+      ]
     },
     {
       id: "org_tech_infra",
       name: "Tech Infra",
       slug: "tech-infra",
+      owner_name: "Taran Kumar",
+      email: "admin@techinfra.com",
+      mobile_number: "+91 98765 33333",
+      category: "Commercial Property",
+      website: "https://techinfra.com",
+      address: "Hyderabad, TS",
       status: "ACTIVE",
       created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+      plan: {
+        id: "plan_business",
+        name: "Business",
+        price: 12999,
+        monthly_messages: 25000,
+        rate_per_meta_msg: 0.70,
+        rate_per_platform_msg: 0.05,
+        status: "ACTIVE",
+        next_renewal: "2026-10-25"
+      },
+      wallet: {
+        balance: 14500,
+        currency: "INR",
+        total_credits: 25000,
+        used_credits: 10500
+      },
       whatsapp_config: {
         mode: "DEMO",
         phone_number_id: "pn_tech_103",
         business_account_id: "act_tech_203",
         access_token: "",
         display_phone_number: "+91 98765 33333",
-        verify_token: "tech_infra_verify_secret"
-      }
+        verify_token: "tech_infra_verify_secret",
+        is_embedded_connected: true,
+        connected_at: new Date(Date.now() - 19 * 86400000).toISOString()
+      },
+      billing_history: [
+        {
+          id: "bill_tech_1",
+          amount: 12999,
+          type: "PLAN_PAYMENT",
+          description: "Business Plan Monthly Subscription (25,000 Messages)",
+          date: new Date(Date.now() - 20 * 86400000).toISOString(),
+          reference: "INV-2026-003"
+        }
+      ]
     },
     {
       id: "org_abc_properties",
       name: "ABC Properties",
       slug: "abc-properties",
+      owner_name: "Anand Sharma",
+      email: "admin@abcproperties.com",
+      mobile_number: "+91 98765 44444",
+      category: "Residential Agency",
+      website: "https://abcproperties.com",
+      address: "Vijayawada, AP",
       status: "ACTIVE",
       created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
+      plan: {
+        id: "plan_starter",
+        name: "Starter",
+        price: 2999,
+        monthly_messages: 5000,
+        rate_per_meta_msg: 0.78,
+        rate_per_platform_msg: 0.10,
+        status: "ACTIVE",
+        next_renewal: "2026-10-30"
+      },
+      wallet: {
+        balance: 2400,
+        currency: "INR",
+        total_credits: 5000,
+        used_credits: 2600
+      },
       whatsapp_config: {
         mode: "DEMO",
         phone_number_id: "pn_abc_104",
         business_account_id: "act_abc_204",
         access_token: "",
         display_phone_number: "+91 98765 44444",
-        verify_token: "abc_properties_verify_secret"
-      }
+        verify_token: "abc_properties_verify_secret",
+        is_embedded_connected: true,
+        connected_at: new Date(Date.now() - 14 * 86400000).toISOString()
+      },
+      billing_history: [
+        {
+          id: "bill_abc_1",
+          amount: 2999,
+          type: "PLAN_PAYMENT",
+          description: "Starter Plan Monthly Subscription (5,000 Messages)",
+          date: new Date(Date.now() - 15 * 86400000).toISOString(),
+          reference: "INV-2026-004"
+        }
+      ]
     },
     {
       id: "org_apex_realestate",
       name: "Apex Real Estate",
       slug: "apex-realestate",
+      owner_name: "Vikram Sharma",
+      email: "admin@apexrealestate.com",
+      mobile_number: "+91 98765 43210",
+      category: "Luxury Apartments",
+      website: "https://apexrealestate.com",
+      address: "Hyderabad, TS",
       status: "ACTIVE",
       created_at: new Date(Date.now() - 40 * 86400000).toISOString(),
+      plan: {
+        id: "plan_growth",
+        name: "Growth",
+        price: 5999,
+        monthly_messages: 10000,
+        rate_per_meta_msg: 0.75,
+        rate_per_platform_msg: 0.08,
+        status: "ACTIVE",
+        next_renewal: "2026-10-05"
+      },
+      wallet: {
+        balance: 6800,
+        currency: "INR",
+        total_credits: 10000,
+        used_credits: 3200
+      },
       whatsapp_config: {
         mode: "DEMO",
         phone_number_id: "pn_48372610",
         business_account_id: "act_10293847",
         access_token: "",
         display_phone_number: "+91 98765 43210",
-        verify_token: "apex_realestate_verify_secret"
-      }
+        verify_token: "apex_realestate_verify_secret",
+        is_embedded_connected: true,
+        connected_at: new Date(Date.now() - 38 * 86400000).toISOString()
+      },
+      billing_history: [
+        {
+          id: "bill_apex_1",
+          amount: 5999,
+          type: "PLAN_PAYMENT",
+          description: "Growth Plan Monthly Subscription (10,000 Messages)",
+          date: new Date(Date.now() - 40 * 86400000).toISOString(),
+          reference: "INV-2026-000"
+        }
+      ]
     }
   ] as OrganizationRecord[],
 
@@ -236,7 +487,8 @@ export const STORE = {
       created_by: "sri_admin",
       created_at: new Date(Date.now() - 3600000).toISOString(),
       started_at: new Date(Date.now() - 3500000).toISOString(),
-      completed_at: new Date(Date.now() - 3400000).toISOString()
+      completed_at: new Date(Date.now() - 3400000).toISOString(),
+      estimated_cost: 3.32
     },
     {
       id: "cmp_sai_1",
@@ -257,7 +509,8 @@ export const STORE = {
       created_by: "sai_admin",
       created_at: new Date(Date.now() - 7200000).toISOString(),
       started_at: new Date(Date.now() - 7100000).toISOString(),
-      completed_at: new Date(Date.now() - 7000000).toISOString()
+      completed_at: new Date(Date.now() - 7000000).toISOString(),
+      estimated_cost: 2.64
     }
   ] as CampaignRecord[],
 
@@ -360,6 +613,44 @@ export function loadStore() {
       }
     }
   } catch (e) {}
+
+  // Ensure default plans and wallets on all loaded organizations
+  if (STORE.organizations && Array.isArray(STORE.organizations)) {
+    STORE.organizations.forEach((org) => {
+      if (!org.plan) {
+        org.plan = {
+          id: "plan_growth",
+          name: "Growth",
+          price: 5999,
+          monthly_messages: 10000,
+          rate_per_meta_msg: 0.75,
+          rate_per_platform_msg: 0.08,
+          status: "ACTIVE",
+          next_renewal: "2026-10-15"
+        };
+      }
+      if (!org.wallet) {
+        org.wallet = {
+          balance: 5000,
+          currency: "INR",
+          total_credits: org.plan.monthly_messages || 10000,
+          used_credits: 1200
+        };
+      }
+      if (!org.billing_history) {
+        org.billing_history = [
+          {
+            id: `bill_${org.id}_init`,
+            amount: org.plan.price,
+            type: "PLAN_PAYMENT",
+            description: `${org.plan.name} Plan Monthly Subscription (${org.plan.monthly_messages.toLocaleString()} Messages)`,
+            date: org.created_at || new Date().toISOString(),
+            reference: `INV-2026-${Math.floor(100 + Math.random() * 900)}`
+          }
+        ];
+      }
+    });
+  }
 
   if (STORE.recipients && Array.isArray(STORE.recipients)) {
     STORE.recipients.forEach((r) => {
