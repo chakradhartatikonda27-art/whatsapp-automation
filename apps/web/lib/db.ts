@@ -2,6 +2,22 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
+export interface OrganizationRecord {
+  id: string;
+  name: string;
+  slug: string;
+  status: "ACTIVE" | "INACTIVE";
+  created_at: string;
+  whatsapp_config: {
+    mode: "DEMO" | "LIVE";
+    phone_number_id: string;
+    business_account_id: string;
+    access_token: string;
+    display_phone_number: string;
+    verify_token: string;
+  };
+}
+
 export interface ContactRecord {
   id: string;
   organization_id: string;
@@ -63,8 +79,86 @@ export interface ImportSession {
   detected_columns: Record<string, string>;
 }
 
-// Global In-Memory Store
+// Global In-Memory Multi-Tenant Store
 export const STORE = {
+  organizations: [
+    {
+      id: "org_sri_infra",
+      name: "Sri Infra",
+      slug: "sri-infra",
+      status: "ACTIVE",
+      created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+      whatsapp_config: {
+        mode: "DEMO",
+        phone_number_id: "pn_sri_101",
+        business_account_id: "act_sri_201",
+        access_token: "",
+        display_phone_number: "+91 98765 11111",
+        verify_token: "sri_infra_verify_secret"
+      }
+    },
+    {
+      id: "org_sai_infra",
+      name: "Sai Infra",
+      slug: "sai-infra",
+      status: "ACTIVE",
+      created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
+      whatsapp_config: {
+        mode: "DEMO",
+        phone_number_id: "pn_sai_102",
+        business_account_id: "act_sai_202",
+        access_token: "",
+        display_phone_number: "+91 98765 22222",
+        verify_token: "sai_infra_verify_secret"
+      }
+    },
+    {
+      id: "org_tech_infra",
+      name: "Tech Infra",
+      slug: "tech-infra",
+      status: "ACTIVE",
+      created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+      whatsapp_config: {
+        mode: "DEMO",
+        phone_number_id: "pn_tech_103",
+        business_account_id: "act_tech_203",
+        access_token: "",
+        display_phone_number: "+91 98765 33333",
+        verify_token: "tech_infra_verify_secret"
+      }
+    },
+    {
+      id: "org_abc_properties",
+      name: "ABC Properties",
+      slug: "abc-properties",
+      status: "ACTIVE",
+      created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
+      whatsapp_config: {
+        mode: "DEMO",
+        phone_number_id: "pn_abc_104",
+        business_account_id: "act_abc_204",
+        access_token: "",
+        display_phone_number: "+91 98765 44444",
+        verify_token: "abc_properties_verify_secret"
+      }
+    },
+    {
+      id: "org_apex_realestate",
+      name: "Apex Real Estate",
+      slug: "apex-realestate",
+      status: "ACTIVE",
+      created_at: new Date(Date.now() - 40 * 86400000).toISOString(),
+      whatsapp_config: {
+        mode: "DEMO",
+        phone_number_id: "pn_48372610",
+        business_account_id: "act_10293847",
+        access_token: "",
+        display_phone_number: "+91 98765 43210",
+        verify_token: "apex_realestate_verify_secret"
+      }
+    }
+  ] as OrganizationRecord[],
+
   config: {
     mode: "DEMO" as "DEMO" | "LIVE",
     phone_number_id: "pn_48372610",
@@ -73,45 +167,85 @@ export const STORE = {
     display_phone_number: "+91 98765 43210",
     verify_token: "apex_realestate_verify_secret"
   },
+
   templates: [
     {
       id: "31a0550e-1dcb-4dc3-9605-b936526455e8",
-      organization_id: "org_apex_realestate",
-      name: "Luxury Villa Pre-Launch Offer",
-      template_name: "luxury_villa_prelaunch",
+      organization_id: "org_sri_infra",
+      name: "Sri Infra Luxury Villa Offer",
+      template_name: "sri_infra_luxury_villa",
       language: "en_US",
       category: "MARKETING",
       status: "APPROVED",
       components: [
         {
           type: "BODY",
-          text: "Hi {{1}}, we are excited to launch modern 3BHK luxury apartments in {{2}}. Exclusive pre-launch discount available this week. Would you like to schedule a private site visit?"
+          text: "Hi {{1}}, Sri Infra has a new property opportunity available in {{2}}. Exclusive pre-launch discount available this week!"
         }
       ]
     },
     {
       id: "52b0660f-2ecb-5dc4-0716-c947637566f9",
-      organization_id: "org_apex_realestate",
-      name: "Site Visit Confirmation",
-      template_name: "site_visit_confirm",
+      organization_id: "org_sai_infra",
+      name: "Sai Infra Gated Community Launch",
+      template_name: "sai_infra_gated_launch",
       language: "en_US",
-      category: "UTILITY",
+      category: "MARKETING",
       status: "APPROVED",
       components: [
         {
           type: "BODY",
-          text: "Hi {{1}}, your site visit for Apex Luxury Living in {{2}} is confirmed. Our Relationship Manager will meet you at the site."
+          text: "Hi {{1}}, Sai Infra is launching premium open plots in {{2}}. Contact us for private site visits!"
+        }
+      ]
+    },
+    {
+      id: "63c07710-3fdc-6ed5-1827-d0587486770a",
+      organization_id: "org_tech_infra",
+      name: "Tech Infra Smart Homes Offer",
+      template_name: "tech_infra_smart_homes",
+      language: "en_US",
+      category: "MARKETING",
+      status: "APPROVED",
+      components: [
+        {
+          type: "BODY",
+          text: "Hi {{1}}, Tech Infra smart 2BHK apartments in {{2}} are now open for booking."
         }
       ]
     }
   ],
+
   campaigns: [
     {
-      id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
-      organization_id: "org_apex_realestate",
-      name: "Gachibowli Luxury Villas Prospect Blast",
+      id: "cmp_sri_1",
+      organization_id: "org_sri_infra",
+      name: "Sri Infra Rajahmundry Villa Launch",
       message_type: "custom",
       template_id: null,
+      message_body: "Hi {{Name}}, Sri Infra has a new property opportunity available in {{Location}}.",
+      media_url: "/sample_property.jpg",
+      status: "COMPLETED",
+      total_contacts: 4,
+      queued_count: 0,
+      sent_count: 4,
+      delivered_count: 4,
+      read_count: 3,
+      failed_count: 0,
+      skipped_count: 0,
+      created_by: "sri_admin",
+      created_at: new Date(Date.now() - 3600000).toISOString(),
+      started_at: new Date(Date.now() - 3500000).toISOString(),
+      completed_at: new Date(Date.now() - 3400000).toISOString()
+    },
+    {
+      id: "cmp_sai_1",
+      organization_id: "org_sai_infra",
+      name: "Sai Infra Open Plots Blast",
+      message_type: "custom",
+      template_id: null,
+      message_body: "Hi {{Name}}, Sai Infra presents gated plots in {{Location}}.",
+      media_url: null,
       status: "COMPLETED",
       total_contacts: 3,
       queued_count: 0,
@@ -120,76 +254,73 @@ export const STORE = {
       read_count: 2,
       failed_count: 0,
       skipped_count: 0,
-      created_by: "user_demo",
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      started_at: new Date(Date.now() - 3500000).toISOString(),
-      completed_at: new Date(Date.now() - 3400000).toISOString()
+      created_by: "sai_admin",
+      created_at: new Date(Date.now() - 7200000).toISOString(),
+      started_at: new Date(Date.now() - 7100000).toISOString(),
+      completed_at: new Date(Date.now() - 7000000).toISOString()
     }
   ] as CampaignRecord[],
+
   recipients: [
     {
-      id: "rec_1",
-      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
-      organization_id: "org_apex_realestate",
-      phone_number: "+919876543210",
-      name: "Ravi Kumar",
-      location: "Gachibowli, Hyderabad",
-      message_hash: "hash_demo_1",
+      id: "rec_sri_1",
+      campaign_id: "cmp_sri_1",
+      organization_id: "org_sri_infra",
+      phone_number: "+918074418868",
+      name: "Ram",
+      location: "Rajahmundry",
+      message_hash: "hash_sri_1",
       status: "DELIVERED",
-      whatsapp_message_id: "wamid.HBgM12345678",
+      whatsapp_message_id: "wamid.SRI_101",
       sent_at: new Date(Date.now() - 3500000).toISOString()
     },
     {
-      id: "rec_2",
-      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
-      organization_id: "org_apex_realestate",
-      phone_number: "+919876543211",
-      name: "Priya Sharma",
-      location: "Jubilee Hills, Hyderabad",
-      message_hash: "hash_demo_2",
+      id: "rec_sri_2",
+      campaign_id: "cmp_sri_1",
+      organization_id: "org_sri_infra",
+      phone_number: "+916302042599",
+      name: "Chakri",
+      location: "Rajahmundry",
+      message_hash: "hash_sri_2",
       status: "READ",
-      whatsapp_message_id: "wamid.HBgM12345679",
+      whatsapp_message_id: "wamid.SRI_102",
       sent_at: new Date(Date.now() - 3500000).toISOString()
     },
     {
-      id: "rec_3",
-      campaign_id: "4ef8a059-a9a3-4f1d-ae74-e65cdf4e915e",
-      organization_id: "org_apex_realestate",
-      phone_number: "+919876543212",
-      name: "Suresh Reddy",
-      location: "Banjara Hills, Hyderabad",
-      message_hash: "hash_demo_3",
+      id: "rec_sri_3",
+      campaign_id: "cmp_sri_1",
+      organization_id: "org_sri_infra",
+      phone_number: "+918885397517",
+      name: "Pujitha",
+      location: "Rajahmundry",
+      message_hash: "hash_sri_3",
       status: "DELIVERED",
-      whatsapp_message_id: "wamid.HBgM12345680",
+      whatsapp_message_id: "wamid.SRI_103",
+      sent_at: new Date(Date.now() - 3500000).toISOString()
+    },
+    {
+      id: "rec_sri_4",
+      campaign_id: "cmp_sri_1",
+      organization_id: "org_sri_infra",
+      phone_number: "+919390560625",
+      name: "Ramu",
+      location: "Kakinada",
+      message_hash: "hash_sri_4",
+      status: "DELIVERED",
+      whatsapp_message_id: "wamid.SRI_104",
       sent_at: new Date(Date.now() - 3500000).toISOString()
     }
   ] as RecipientRecord[],
+
   contacts: [
-    {
-      id: "c1",
-      organization_id: "org_apex_realestate",
-      name: "Ravi Kumar",
-      phone_number: "+919876543210",
-      location: "Gachibowli, Hyderabad",
-      created_at: new Date(Date.now() - 86400000).toISOString()
-    },
-    {
-      id: "c2",
-      organization_id: "org_apex_realestate",
-      name: "Priya Sharma",
-      phone_number: "+919876543211",
-      location: "Jubilee Hills, Hyderabad",
-      created_at: new Date(Date.now() - 86400000).toISOString()
-    },
-    {
-      id: "c3",
-      organization_id: "org_apex_realestate",
-      name: "Suresh Reddy",
-      phone_number: "+919876543212",
-      location: "Banjara Hills, Hyderabad",
-      created_at: new Date(Date.now() - 86400000).toISOString()
-    }
+    { id: "c_sri_1", organization_id: "org_sri_infra", name: "Ram", phone_number: "+918074418868", location: "Rajahmundry", created_at: new Date().toISOString() },
+    { id: "c_sri_2", organization_id: "org_sri_infra", name: "Chakri", phone_number: "+916302042599", location: "Rajahmundry", created_at: new Date().toISOString() },
+    { id: "c_sri_3", organization_id: "org_sri_infra", name: "Pujitha", phone_number: "+918885397517", location: "Rajahmundry", created_at: new Date().toISOString() },
+    { id: "c_sri_4", organization_id: "org_sri_infra", name: "Ramu", phone_number: "+919390560625", location: "Kakinada", created_at: new Date().toISOString() },
+    { id: "c_sai_1", organization_id: "org_sai_infra", name: "Vikram Varma", phone_number: "+919876500001", location: "Visakhapatnam", created_at: new Date().toISOString() },
+    { id: "c_tech_1", organization_id: "org_tech_infra", name: "Anil Kumar", phone_number: "+919876500002", location: "Hyderabad", created_at: new Date().toISOString() }
   ] as ContactRecord[],
+
   imports: {} as Record<string, ImportSession>,
   messageHashes: new Set<string>()
 };
@@ -199,6 +330,7 @@ const TMP_FILE = path.join("/tmp", "whatsapp_saas_store_persist.json");
 export function saveStore() {
   try {
     const data = {
+      organizations: STORE.organizations,
       config: STORE.config,
       campaigns: STORE.campaigns,
       recipients: STORE.recipients,
@@ -208,7 +340,7 @@ export function saveStore() {
     };
     fs.writeFileSync(TMP_FILE, JSON.stringify(data), "utf-8");
   } catch (e) {
-    // Ignore file write errors on read-only systems
+    // Ignore write errors
   }
 }
 
@@ -217,6 +349,7 @@ export function loadStore() {
     if (fs.existsSync(TMP_FILE)) {
       const raw = fs.readFileSync(TMP_FILE, "utf-8");
       const data = JSON.parse(raw);
+      if (Array.isArray(data.organizations)) STORE.organizations = data.organizations;
       if (data.config) STORE.config = data.config;
       if (Array.isArray(data.campaigns)) STORE.campaigns = data.campaigns;
       if (Array.isArray(data.recipients)) STORE.recipients = data.recipients;
@@ -226,11 +359,8 @@ export function loadStore() {
         data.messageHashes.forEach((h: string) => STORE.messageHashes.add(h));
       }
     }
-  } catch (e) {
-    // Ignore load errors
-  }
+  } catch (e) {}
 
-  // Populate messageHashes from recipients array to guarantee duplicate detection
   if (STORE.recipients && Array.isArray(STORE.recipients)) {
     STORE.recipients.forEach((r) => {
       if (r.message_hash) {
@@ -253,7 +383,6 @@ export function computeMessageFingerprint(
   const normOrg = (organizationId || "").trim().toLowerCase();
   const normPhone = (phoneNumber || "").trim();
   const normContent = (messageContentOrTemplate || "").trim();
-
   const sortedVars = JSON.stringify(variables || {});
   const normMedia = (mediaIdentifier || "").trim();
 

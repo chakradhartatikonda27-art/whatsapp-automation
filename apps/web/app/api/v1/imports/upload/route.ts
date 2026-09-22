@@ -45,6 +45,7 @@ function parseTextDocumentToRows(rawText: string): any[] {
 
 export async function POST(request: Request) {
   try {
+    const orgId = request.headers.get("x-organization-id") || "org_sri_infra";
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const { searchParams } = new URL(request.url);
@@ -142,7 +143,7 @@ export async function POST(request: Request) {
       seenInFile.add(normalized);
 
       const msgHash = computeMessageFingerprint(
-        "org_apex_realestate",
+        orgId,
         normalized,
         templateName,
         { "1": nameVal, "2": locVal }
@@ -170,7 +171,7 @@ export async function POST(request: Request) {
     const result = {
       import_id: importId,
       file_name: file.name,
-      organization_id: "org_apex_realestate",
+      organization_id: orgId,
       total_rows: rawRows.length,
       valid_contacts: validContacts,
       invalid_numbers: invalidNumbers,

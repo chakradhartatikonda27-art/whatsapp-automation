@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
-import { STORE } from "@/lib/db";
+import { STORE, loadStore } from "@/lib/db";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
+  loadStore();
+  const orgId = req.headers.get("x-organization-id") || "org_sri_infra";
   const { searchParams } = new URL(req.url);
   const statusFilter = searchParams.get("status");
   const search = searchParams.get("search")?.toLowerCase();
 
   let recipients = STORE.recipients.filter((r) => r.campaign_id === params.id);
 
-  // If no recipients specifically match this campaign ID (e.g. serverless cold start),
-  // adapt existing stored recipients to match this campaign ID
+  // If no recipients specifically match this campaign ID, filter tenant recipients
   if (recipients.length === 0) {
-    recipients = STORE.recipients.map((r) => ({
-      ...r,
-      campaign_id: params.id
-    }));
+    recipients = STORE.recipients
+      .filter((r) => r.organization_id === orgId)
+      .map((r) => ({
+        ...r,
+        campaign_id: params.id
+      }));
   }
 
   // Filter by status (ignore "ALL")

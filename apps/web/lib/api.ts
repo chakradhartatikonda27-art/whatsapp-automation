@@ -263,6 +263,11 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  if (typeof window !== "undefined") {
+    const activeOrg = localStorage.getItem("active_org_id") || "org_sri_infra";
+    headers["x-organization-id"] = activeOrg;
+  }
+
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
@@ -430,6 +435,12 @@ export const api = {
   getWhatsAppConfig: () => fetchWithAuth("/api/v1/whatsapp/config"),
   updateWhatsAppConfig: (data: any) =>
     fetchWithAuth("/api/v1/whatsapp/config", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getAdminOrganizations: () => fetchWithAuth("/api/v1/admin/organizations"),
+  onboardBusiness: (data: any) =>
+    fetchWithAuth("/api/v1/admin/organizations", {
       method: "POST",
       body: JSON.stringify(data),
     }),

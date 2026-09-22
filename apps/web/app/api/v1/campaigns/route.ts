@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
 import { STORE, loadStore, saveStore, computeMessageFingerprint, normalizePhone, CampaignRecord, RecipientRecord } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: Request) {
   loadStore();
-  return NextResponse.json(STORE.campaigns);
+  const orgId = req.headers.get("x-organization-id") || "org_sri_infra";
+  const tenantCampaigns = STORE.campaigns.filter((c) => c.organization_id === orgId || !c.organization_id);
+  return NextResponse.json(tenantCampaigns);
 }
 
 export async function POST(req: Request) {
   try {
     loadStore();
+    const orgId = req.headers.get("x-organization-id") || "org_sri_infra";
     const body = await req.json();
     const campaignId = "cmp_" + Math.random().toString(36).substring(2, 9);
-    const orgId = "org_apex_realestate";
+
+    // Fetch tenant organization whatsapp credentials
+    const org = STORE.organizations.find((o) => o.id === orgId);
+    const waConfig = org?.whatsapp_config || STORE.config;
 
     if (Array.isArray(body.client_fingerprints)) {
       body.client_fingerprints.forEach((h: string) => STORE.messageHashes.add(h));
@@ -24,11 +30,16 @@ export async function POST(req: Request) {
     } else if (Array.isArray(body.contacts) && body.contacts.length > 0) {
       targetContacts = body.contacts;
     } else {
-      targetContacts = [
-        { name: "Ravi Kumar", phone_number: "+919876543210", location: "Gachibowli, Hyderabad" },
-        { name: "Priya Sharma", phone_number: "+919876543211", location: "Jubilee Hills, Hyderabad" },
-        { name: "Suresh Reddy", phone_number: "+919876543212", location: "Banjara Hills, Hyderabad" }
-      ];
+      // Default tenant contacts fallback
+      targetContacts = STORE.contacts.filter((c) => c.organization_id === orgId);
+      if (targetContacts.length === 0) {
+        targetContacts = [
+          { name: "Ram", phone_number: "+918074418868", location: "Rajahmundry" },
+          { name: "Chakri", phone_number: "+916302042599", location: "Rajahmundry" },
+          { name: "Pujitha", phone_number: "+918885397517", location: "Rajahmundry" },
+          { name: "Ramu", phone_number: "+919390560625", location: "Kakinada" }
+        ];
+      }
     }
 
     let sentCount = 0;
@@ -40,7 +51,7 @@ export async function POST(req: Request) {
 
     const messageTemplateOrBody = body.message_body || body.template_id || "Real Estate Announcement";
     const mediaUrl = body.media_url || "";
-    const isLiveMode = STORE.config.mode === "LIVE" && Boolean(STORE.config.access_token);
+    const isLiveMode = waConfig.mode === "LIVE" && Boolean(waConfig.access_token);
 
     for (const c of targetContacts) {
       const phoneRes = normalizePhone(c.phone_number || c.phone || "");
@@ -51,14 +62,14 @@ export async function POST(req: Request) {
 
       const canonicalPhone = phoneRes.normalized;
       const contactName = c.name || "Valued Prospect";
-      const location = c.location || "Hyderabad";
+      const location = c.location || "Rajahmundry";
 
       const vars = { name: contactName, location };
       const fingerprint = computeMessageFingerprint(orgId, canonicalPhone, messageTemplateOrBody, vars, mediaUrl);
       const recipientId = "rec_" + Math.random().toString(36).substring(2, 9);
       processedFingerprints.push(fingerprint);
 
-      const isDuplicate = STORE.messageHashes.has(fingerprint) || STORE.recipients.some((r) => r.message_hash === fingerprint);
+      const isDuplicate = STORE.messageHashes.has(fingerprint) || STORE.recipients.some((r) => r.organization_id === orgId && r.message_hash === fingerprint);
 
       if (isDuplicate) {
         // DUPLICATE DETECTED - SKIP OUTBOUND DISPATCH
@@ -82,7 +93,7 @@ export async function POST(req: Request) {
         let failureReason: string | null = null;
 
         if (isLiveMode) {
-          // DISPATCH TO LIVE META WHATSAPP CLOUD API
+          // DISPATCH TO LIVE META WHATSAPP CLOUD API FOR THIS TENANT
           try {
             const interpolatedText = (body.message_body || "Hello {{Name}}")
               .replace(/\{\{\s*Name\s*\}\}/gi, contactName)
@@ -108,11 +119,11 @@ export async function POST(req: Request) {
             }
 
             const metaRes = await fetch(
-              `https://graph.facebook.com/v19.0/${STORE.config.phone_number_id}/messages`,
+              `https://graph.facebook.com/v19.0/${waConfig.phone_number_id}/messages`,
               {
                 method: "POST",
                 headers: {
-                  "Authorization": `Bearer ${STORE.config.access_token}`,
+                  "Authorization": `Bearer ${waConfig.access_token}`,
                   "Content-Type": "application/json"
                 },
                 body: JSON.stringify(metaPayload)
@@ -163,8 +174,8 @@ export async function POST(req: Request) {
           read_at: dispatchStatus === "READ" || dispatchStatus === "DELIVERED" ? new Date().toISOString() : undefined
         });
 
-        // Add to global contacts directory if not present
-        if (!STORE.contacts.some((ct) => ct.phone_number === canonicalPhone)) {
+        // Add to tenant contacts directory if not present
+        if (!STORE.contacts.some((ct) => ct.organization_id === orgId && ct.phone_number === canonicalPhone)) {
           STORE.contacts.push({
             id: "ct_" + Math.random().toString(36).substring(2, 9),
             organization_id: orgId,
@@ -184,7 +195,7 @@ export async function POST(req: Request) {
     const campaignRecord: CampaignRecord = {
       id: campaignId,
       organization_id: orgId,
-      name: body.name || "Real Estate Prospect Campaign",
+      name: body.name || `${org?.name || "Real Estate"} Campaign`,
       message_type: body.message_type || (body.template_id ? "template" : "custom"),
       template_id: body.template_id || null,
       message_body: body.message_body || null,
@@ -197,7 +208,7 @@ export async function POST(req: Request) {
       read_count: isAllSkipped ? 0 : readCount,
       failed_count: failedCount,
       skipped_count: skippedCount,
-      created_by: "user_demo",
+      created_by: "tenant_admin",
       created_at: new Date().toISOString(),
       started_at: new Date().toISOString(),
       completed_at: isAllSkipped ? new Date().toISOString() : undefined,
