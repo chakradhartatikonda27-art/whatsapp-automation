@@ -99,7 +99,7 @@ export function Navigation() {
     { href: "/campaigns", label: "Campaigns", icon: Send },
     { href: "/campaigns/create", label: "Create", icon: PlusCircle, isPrimary: true },
     { href: "/contacts", label: "Contacts", icon: Users },
-    { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/billing", label: "Billing", icon: Wallet },
   ];
 
   return (
