@@ -270,40 +270,73 @@ export default function CreateCampaignPage() {
         {/* STEP 2: Import Validation Results */}
         {step === 2 && importResult && (
           <div className="glass-card p-8 rounded-2xl max-w-3xl space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-100 mb-1">Step 2 — Import Validation Summary</h2>
-              <p className="text-xs text-slate-400">File: <span className="text-slate-200 font-medium">{importResult.file_name}</span></p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-100 mb-0.5">Step 2 — Automatic Extraction & Preview</h2>
+                <p className="text-xs text-slate-400">Source: <span className="text-slate-200 font-medium">{importResult.file_name}</span></p>
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" />
+                {importResult.valid_contacts} contacts detected — {importResult.ready_for_campaign} valid
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-xs text-slate-400">Total Rows</span>
-                <p className="text-2xl font-bold text-slate-100 mt-1">{importResult.total_rows.toLocaleString()}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <span className="text-slate-400">Total Extracted</span>
+                <p className="text-xl font-bold text-slate-100 mt-0.5">{importResult.total_rows.toLocaleString()}</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <span className="text-xs text-emerald-400">Valid Contacts</span>
-                <p className="text-2xl font-bold text-emerald-300 mt-1">{importResult.valid_contacts.toLocaleString()}</p>
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <span className="text-emerald-400 font-semibold">Valid Contacts</span>
+                <p className="text-xl font-bold text-emerald-300 mt-0.5">{importResult.valid_contacts.toLocaleString()}</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                <span className="text-xs text-rose-400">Invalid Numbers</span>
-                <p className="text-2xl font-bold text-rose-300 mt-1">{importResult.invalid_numbers.toLocaleString()}</p>
+              <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                <span className="text-indigo-400">Skipped Duplicates</span>
+                <p className="text-xl font-bold text-indigo-300 mt-0.5">{importResult.previously_processed.toLocaleString()}</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                <span className="text-xs text-amber-400">File Duplicates</span>
-                <p className="text-2xl font-bold text-amber-300 mt-1">{importResult.duplicate_rows.toLocaleString()}</p>
+              <div className="p-3.5 rounded-xl bg-brand-500/10 border border-brand-500/20">
+                <span className="text-brand-400 font-semibold">Ready to Send</span>
+                <p className="text-xl font-bold text-brand-300 mt-0.5">{importResult.ready_for_campaign.toLocaleString()}</p>
               </div>
+            </div>
 
-              <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                <span className="text-xs text-indigo-400">Previously Sent (Skipped)</span>
-                <p className="text-2xl font-bold text-indigo-300 mt-1">{importResult.previously_processed.toLocaleString()}</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-brand-500/10 border border-brand-500/20">
-                <span className="text-xs text-brand-400 font-semibold">Ready to Queue</span>
-                <p className="text-2xl font-bold text-brand-300 mt-1">{importResult.ready_for_campaign.toLocaleString()}</p>
+            {/* Extracted Contacts Preview Table */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Extracted Contacts Preview</h3>
+              <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px] bg-slate-900/50">
+                      <th className="py-2.5 px-4 font-semibold">Name</th>
+                      <th className="py-2.5 px-4 font-semibold">Phone Number</th>
+                      <th className="py-2.5 px-4 font-semibold">City / Location</th>
+                      <th className="py-2.5 px-4 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 font-mono">
+                    {(importResult.sample_valid || []).map((c: any, i: number) => (
+                      <tr key={i} className="hover:bg-slate-900/40">
+                        <td className="py-2.5 px-4 font-sans font-semibold text-slate-200">{c.name}</td>
+                        <td className="py-2.5 px-4 text-slate-300">{c.phone_number}</td>
+                        <td className="py-2.5 px-4 font-sans text-slate-400">{c.location || "Rajahmundry"}</td>
+                        <td className="py-2.5 px-4 font-sans">
+                          {c.is_duplicate_send ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                              Duplicate — Previously Sent
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                              Valid ✓
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -316,7 +349,7 @@ export default function CreateCampaignPage() {
               </button>
               <button
                 onClick={() => setStep(3)}
-                className="flex items-center gap-2 px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-slate-950 text-xs font-semibold"
+                className="flex items-center gap-2 px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-slate-950 text-xs font-semibold shadow-md shadow-brand-500/20"
               >
                 Continue to Message & Media <ArrowRight className="w-4 h-4" />
               </button>
