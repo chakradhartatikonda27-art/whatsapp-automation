@@ -214,6 +214,52 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* V2 Product Roadmap Showcase: Shared WhatsApp Inbox & Sales CRM */}
+        <div className="glass-card p-6 rounded-2xl border border-indigo-500/20 bg-indigo-950/10 space-y-4 mt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-indigo-500/20">
+            <div>
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold uppercase tracking-wider">
+                Product Roadmap V2 Preview
+              </span>
+              <h3 className="text-base font-bold text-slate-100 mt-1">Shared WhatsApp Inbox & Sales CRM Pipeline</h3>
+            </div>
+            <span className="text-xs text-indigo-400 font-semibold">Coming in V2 Upgrade 🚀</span>
+          </div>
+
+          <p className="text-xs text-slate-400">
+            Transform customer replies from WhatsApp campaigns into active sales opportunities with automated lead stages and team assignment.
+          </p>
+
+          {/* CRM Pipeline Visualizer */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs pt-2">
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-[10px] text-slate-500 font-mono">STAGE 1</span>
+              <p className="font-bold text-slate-200">New Lead</p>
+              <span className="text-[10px] text-brand-400 font-mono">14 Leads</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-[10px] text-slate-500 font-mono">STAGE 2</span>
+              <p className="font-bold text-blue-300">Interested</p>
+              <span className="text-[10px] text-blue-400 font-mono">8 Leads</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-[10px] text-slate-500 font-mono">STAGE 3</span>
+              <p className="font-bold text-indigo-300">Site Visit</p>
+              <span className="text-[10px] text-indigo-400 font-mono">5 Leads</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-[10px] text-slate-500 font-mono">STAGE 4</span>
+              <p className="font-bold text-purple-300">Negotiation</p>
+              <span className="text-[10px] text-purple-400 font-mono">3 Leads</span>
+            </div>
+            <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-1 col-span-2 sm:col-span-1">
+              <span className="text-[10px] text-emerald-400 font-mono">STAGE 5</span>
+              <p className="font-bold text-emerald-300">Booked ✓</p>
+              <span className="text-[10px] text-emerald-400 font-mono font-bold">2 Units</span>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

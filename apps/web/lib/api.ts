@@ -460,4 +460,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  toggleOptOut: (contactId: string) =>
+    fetchWithAuth(`/api/v1/contacts/${contactId}/opt-out`, {
+      method: "POST",
+    }),
+  getTeamUsers: () => fetchWithAuth("/api/v1/settings/users"),
+  addTeamUser: (data: any) =>
+    fetchWithAuth("/api/v1/settings/users", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getAuditLogs: () => fetchWithAuth("/api/v1/audit-logs"),
 };

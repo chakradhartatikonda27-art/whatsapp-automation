@@ -2,6 +2,24 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
+export interface UserRecord {
+  id: string;
+  organization_id: string;
+  name: string;
+  email: string;
+  role: "Owner" | "Admin" | "Campaign Manager" | "Sales User" | "Viewer";
+  created_at: string;
+}
+
+export interface AuditLogRecord {
+  id: string;
+  organization_id: string;
+  user_name: string;
+  action: string;
+  details: string;
+  timestamp: string;
+}
+
 export interface OrganizationRecord {
   id: string;
   name: string;
@@ -12,6 +30,7 @@ export interface OrganizationRecord {
   category?: string;
   website?: string;
   address?: string;
+  gst_number?: string;
   status: "ACTIVE" | "INACTIVE";
   created_at: string;
   plan: {
@@ -48,6 +67,8 @@ export interface OrganizationRecord {
     date: string;
     reference?: string;
   }>;
+  users?: UserRecord[];
+  audit_logs?: AuditLogRecord[];
 }
 
 export interface ContactRecord {
@@ -56,6 +77,9 @@ export interface ContactRecord {
   name: string;
   phone_number: string;
   location?: string;
+  tags?: string[];
+  opt_out?: boolean;
+  opt_out_at?: string;
   created_at: string;
 }
 
@@ -165,6 +189,7 @@ export const STORE = {
       category: "Real Estate Developer",
       website: "https://sriinfra.com",
       address: "Rajahmundry, AP",
+      gst_number: "37AAACS9999A1Z1",
       status: "ACTIVE",
       created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
       plan: {
@@ -210,6 +235,14 @@ export const STORE = {
           date: new Date(Date.now() - 10 * 86400000).toISOString(),
           reference: "PAY-2026-882"
         }
+      ],
+      users: [
+        { id: "usr_sri_1", organization_id: "org_sri_infra", name: "Srikanth Verma", email: "admin@sriinfra.com", role: "Owner", created_at: new Date().toISOString() },
+        { id: "usr_sri_2", organization_id: "org_sri_infra", name: "Kiran Kumar", email: "kiran@sriinfra.com", role: "Campaign Manager", created_at: new Date().toISOString() }
+      ],
+      audit_logs: [
+        { id: "log_sri_1", organization_id: "org_sri_infra", user_name: "Srikanth Verma", action: "WhatsApp Connected", details: "Connected WhatsApp Business Line (+91 98765 11111) via Meta Embedded Flow", timestamp: new Date(Date.now() - 28 * 86400000).toISOString() },
+        { id: "log_sri_2", organization_id: "org_sri_infra", user_name: "Kiran Kumar", action: "Campaign Launched", details: "Launched Rajahmundry Villa Launch campaign (4 recipients)", timestamp: new Date(Date.now() - 3600000).toISOString() }
       ]
     },
     {
@@ -259,6 +292,12 @@ export const STORE = {
           date: new Date(Date.now() - 25 * 86400000).toISOString(),
           reference: "INV-2026-002"
         }
+      ],
+      users: [
+        { id: "usr_sai_1", organization_id: "org_sai_infra", name: "Sai Ram", email: "admin@saiinfra.com", role: "Owner", created_at: new Date().toISOString() }
+      ],
+      audit_logs: [
+        { id: "log_sai_1", organization_id: "org_sai_infra", user_name: "Sai Ram", action: "Campaign Launched", details: "Launched Open Plots Blast campaign", timestamp: new Date(Date.now() - 7200000).toISOString() }
       ]
     },
     {
@@ -308,7 +347,11 @@ export const STORE = {
           date: new Date(Date.now() - 20 * 86400000).toISOString(),
           reference: "INV-2026-003"
         }
-      ]
+      ],
+      users: [
+        { id: "usr_tech_1", organization_id: "org_tech_infra", name: "Taran Kumar", email: "admin@techinfra.com", role: "Owner", created_at: new Date().toISOString() }
+      ],
+      audit_logs: []
     },
     {
       id: "org_abc_properties",
@@ -357,7 +400,11 @@ export const STORE = {
           date: new Date(Date.now() - 15 * 86400000).toISOString(),
           reference: "INV-2026-004"
         }
-      ]
+      ],
+      users: [
+        { id: "usr_abc_1", organization_id: "org_abc_properties", name: "Anand Sharma", email: "admin@abcproperties.com", role: "Owner", created_at: new Date().toISOString() }
+      ],
+      audit_logs: []
     },
     {
       id: "org_apex_realestate",
@@ -406,7 +453,11 @@ export const STORE = {
           date: new Date(Date.now() - 40 * 86400000).toISOString(),
           reference: "INV-2026-000"
         }
-      ]
+      ],
+      users: [
+        { id: "usr_apex_1", organization_id: "org_apex_realestate", name: "Vikram Sharma", email: "admin@apexrealestate.com", role: "Owner", created_at: new Date().toISOString() }
+      ],
+      audit_logs: []
     }
   ] as OrganizationRecord[],
 
@@ -566,12 +617,12 @@ export const STORE = {
   ] as RecipientRecord[],
 
   contacts: [
-    { id: "c_sri_1", organization_id: "org_sri_infra", name: "Ram", phone_number: "+918074418868", location: "Rajahmundry", created_at: new Date().toISOString() },
-    { id: "c_sri_2", organization_id: "org_sri_infra", name: "Chakri", phone_number: "+916302042599", location: "Rajahmundry", created_at: new Date().toISOString() },
-    { id: "c_sri_3", organization_id: "org_sri_infra", name: "Pujitha", phone_number: "+918885397517", location: "Rajahmundry", created_at: new Date().toISOString() },
-    { id: "c_sri_4", organization_id: "org_sri_infra", name: "Ramu", phone_number: "+919390560625", location: "Kakinada", created_at: new Date().toISOString() },
-    { id: "c_sai_1", organization_id: "org_sai_infra", name: "Vikram Varma", phone_number: "+919876500001", location: "Visakhapatnam", created_at: new Date().toISOString() },
-    { id: "c_tech_1", organization_id: "org_tech_infra", name: "Anil Kumar", phone_number: "+919876500002", location: "Hyderabad", created_at: new Date().toISOString() }
+    { id: "c_sri_1", organization_id: "org_sri_infra", name: "Ram", phone_number: "+918074418868", location: "Rajahmundry", tags: ["Villa", "Buyer", "Interested"], opt_out: false, created_at: new Date().toISOString() },
+    { id: "c_sri_2", organization_id: "org_sri_infra", name: "Chakri", phone_number: "+916302042599", location: "Rajahmundry", tags: ["Investor", "Apartment"], opt_out: false, created_at: new Date().toISOString() },
+    { id: "c_sri_3", organization_id: "org_sri_infra", name: "Pujitha", phone_number: "+918885397517", location: "Rajahmundry", tags: ["Buyer", "Follow-up"], opt_out: false, created_at: new Date().toISOString() },
+    { id: "c_sri_4", organization_id: "org_sri_infra", name: "Ramu", phone_number: "+919390560625", location: "Kakinada", tags: ["Plot", "Investor"], opt_out: false, created_at: new Date().toISOString() },
+    { id: "c_sai_1", organization_id: "org_sai_infra", name: "Vikram Varma", phone_number: "+919876500001", location: "Visakhapatnam", tags: ["Plot", "Buyer"], opt_out: false, created_at: new Date().toISOString() },
+    { id: "c_tech_1", organization_id: "org_tech_infra", name: "Anil Kumar", phone_number: "+919876500002", location: "Hyderabad", tags: ["Apartment", "Interested"], opt_out: false, created_at: new Date().toISOString() }
   ] as ContactRecord[],
 
   imports: {} as Record<string, ImportSession>,
@@ -614,7 +665,7 @@ export function loadStore() {
     }
   } catch (e) {}
 
-  // Ensure default plans and wallets on all loaded organizations
+  // Ensure default plans, wallets, users, and audit logs on all loaded organizations
   if (STORE.organizations && Array.isArray(STORE.organizations)) {
     STORE.organizations.forEach((org) => {
       if (!org.plan) {
@@ -636,6 +687,16 @@ export function loadStore() {
           total_credits: org.plan.monthly_messages || 10000,
           used_credits: 1200
         };
+      }
+      if (!org.users || org.users.length === 0) {
+        org.users = [
+          { id: `usr_${org.id}_1`, organization_id: org.id, name: org.owner_name || "Business Owner", email: org.email || `admin@${org.slug}.com`, role: "Owner", created_at: new Date().toISOString() }
+        ];
+      }
+      if (!org.audit_logs) {
+        org.audit_logs = [
+          { id: `log_${org.id}_init`, organization_id: org.id, user_name: org.owner_name || "System", action: "Account Activated", details: `Account activated under ${org.plan.name} Plan`, timestamp: org.created_at || new Date().toISOString() }
+        ];
       }
       if (!org.billing_history) {
         org.billing_history = [
