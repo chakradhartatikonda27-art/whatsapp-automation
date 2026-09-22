@@ -17,6 +17,11 @@
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
   }
+
+  html.light, body.light {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
 }
 
 /* Prevent iOS Safari input auto-zoom on focus */
@@ -64,6 +69,72 @@
 
 .glass-card:hover {
   border-color: rgba(34, 197, 94, 0.3);
+}
+
+/* CRISP WHITE THEME OVERRIDES */
+html.light .glass-card {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .bg-\[\#070a12\],
+html.light main.bg-\[\#070a12\] {
+  background-color: #f8fafc !important;
+}
+
+html.light .bg-slate-950,
+html.light .bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/95,
+html.light .bg-slate-950\/95 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .border-slate-800,
+html.light .border-slate-800\/80,
+html.light .border-slate-800\/60,
+html.light .border-slate-700 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .text-slate-100,
+html.light .text-slate-200 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-300,
+html.light .text-slate-400 {
+  color: #334155 !important;
+}
+
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light table th {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+html.light header.glass-card,
+html.light nav.glass-card,
+html.light aside.glass-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
 }
 
 .status-pill {

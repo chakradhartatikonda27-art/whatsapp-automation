@@ -20,13 +20,16 @@ import {
   ShieldCheck,
   Zap,
   Server,
-  Wallet
+  Wallet,
+  Sun,
+  Moon
 } from "lucide-react";
 
 export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [organizations, setOrganizations] = useState<any[]>([
     { id: "org_sri_infra", name: "Sri Infra" },
     { id: "org_sai_infra", name: "Sai Infra" },
@@ -41,6 +44,16 @@ export function Navigation() {
     ensureAuthenticated();
 
     if (typeof window !== "undefined") {
+      const savedTheme = (localStorage.getItem("app_theme") as "light" | "dark") || "light";
+      setTheme(savedTheme);
+      if (savedTheme === "light") {
+        document.documentElement.classList.add("light");
+        document.body.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+        document.body.classList.remove("light");
+      }
+
       const savedOrgId = localStorage.getItem("active_org_id") || "org_sri_infra";
       const savedOrgName = localStorage.getItem("active_org_name") || "Sri Infra";
       setActiveOrgId(savedOrgId);
@@ -80,6 +93,21 @@ export function Navigation() {
       localStorage.setItem("active_org_id", orgId);
       localStorage.setItem("active_org_name", name);
       window.location.reload();
+    }
+  };
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("app_theme", nextTheme);
+      if (nextTheme === "light") {
+        document.documentElement.classList.add("light");
+        document.body.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+        document.body.classList.remove("light");
+      }
     }
   };
 
@@ -133,6 +161,13 @@ export function Navigation() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100 transition-colors flex items-center justify-center"
+            title={`Switch to ${theme === "light" ? "Dark" : "White"} Mode`}
+          >
+            {theme === "light" ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-400" />}
+          </button>
           <Link
             href="/campaigns/create"
             className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-brand-500 text-slate-950 font-bold text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all"
@@ -318,16 +353,25 @@ export function Navigation() {
             <p className="text-xs font-bold text-slate-200 truncate">{activeOrgName}</p>
             <p className="text-[10px] text-brand-400 font-medium truncate">admin@{activeOrgName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com</p>
           </div>
-          <button
-            onClick={() => {
-              localStorage.clear();
-              window.location.href = "/login";
-            }}
-            className="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors"
-            title="Sign out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggleTheme}
+              className="text-slate-400 hover:text-amber-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+              title={`Switch to ${theme === "light" ? "Dark" : "White"} Mode`}
+            >
+              {theme === "light" ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-400" />}
+            </button>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = "/login";
+              }}
+              className="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors"
+              title="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </aside>
     </>
