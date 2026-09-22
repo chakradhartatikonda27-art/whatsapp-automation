@@ -69,7 +69,21 @@ export async function POST(req: Request) {
       const recipientId = "rec_" + Math.random().toString(36).substring(2, 9);
       processedFingerprints.push(fingerprint);
 
-      const isDuplicate = STORE.messageHashes.has(fingerprint) || STORE.recipients.some((r) => r.organization_id === orgId && r.message_hash === fingerprint);
+      const isDuplicate = 
+        STORE.messageHashes.has(fingerprint) || 
+        STORE.recipients.some((r) => r.organization_id === orgId && r.message_hash === fingerprint) ||
+        STORE.recipients.some((r) => {
+          if (r.organization_id !== orgId) return false;
+          const rPhone = normalizePhone(r.phone_number).normalized;
+          if (rPhone !== canonicalPhone) return false;
+          const parentCamp = STORE.campaigns.find((cp) => cp.id === r.campaign_id);
+          if (parentCamp) {
+            const parentContent = (parentCamp.message_body || parentCamp.template_id || "").trim().toLowerCase();
+            const currentContent = (messageTemplateOrBody || "").trim().toLowerCase();
+            return parentContent === currentContent && parentContent !== "";
+          }
+          return false;
+        });
 
       if (isDuplicate) {
         // DUPLICATE DETECTED - SKIP OUTBOUND DISPATCH

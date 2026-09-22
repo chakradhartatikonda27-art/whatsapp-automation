@@ -733,12 +733,13 @@ export function computeMessageFingerprint(
   mediaIdentifier: string = ""
 ): string {
   const normOrg = (organizationId || "").trim().toLowerCase();
-  const normPhone = (phoneNumber || "").trim();
-  const normContent = (messageContentOrTemplate || "").trim();
-  const sortedVars = JSON.stringify(variables || {});
+  const phoneRes = normalizePhone(phoneNumber);
+  const normPhone = phoneRes.normalized;
+  const normContent = (messageContentOrTemplate || "").trim().toLowerCase().replace(/\s+/g, " ");
   const normMedia = (mediaIdentifier || "").trim();
 
-  const raw = `${normOrg}|${normPhone}|${normContent}|${sortedVars}|${normMedia}`;
+  // Core Rule: Same Business + Same Contact Phone + Same Message Content/Template = Duplicate
+  const raw = `${normOrg}|${normPhone}|${normContent}|${normMedia}`;
   return crypto.createHash("sha256").update(raw, "utf-8").digest("hex");
 }
 
